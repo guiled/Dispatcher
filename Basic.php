@@ -80,6 +80,9 @@ class Basic extends Dispatcher {
 
         $called     = null;
         $variables  = &$rule[\Hoa\Router::RULE_VARIABLES];
+        $unnamed    = isset($variables['_unnamed'])
+                        ? $variables['_unnamed']
+                        : array();
         $call       = isset($variables['controller'])
                           ? $variables['controller']
                           : (isset($variables['_call'])
@@ -225,17 +228,17 @@ class Basic extends Dispatcher {
             $called     = $controller;
             $reflection = new \ReflectionMethod($controller, $action);
 
-            foreach($reflection->getParameters() as $parameter) {
+            foreach($reflection->getParameters() as $num => $parameter) {
 
                 $name = strtolower($parameter->getName());
 
                 if(true === array_key_exists($name, $variables)) {
 
                     $arguments[$name] = $variables[$name];
-                    continue;
-                }
+                } elseif (isset($unnamed[$num])) {
 
-                if(false === $parameter->isOptional())
+                    $arguments[$name] = $unnamed[$num];
+                } elseif (false === $parameter->isOptional())
                     throw new Exception(
                         'The action %s on the controller %s needs a value for ' .
                         'the parameter $%s and this value does not exist.',
